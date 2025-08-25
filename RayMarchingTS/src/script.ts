@@ -1,5 +1,11 @@
-import { input, update_input } from "./input"
 import * as THREE from "three"
+import { Input } from "./input";
+
+// const SMOOTH = [.5, .25, .125, 0.0625, 0.03125, 0.015625, 0.0078125, 0.00390625, 0.001953125, 0.0009765625]
+const SMOOTH = [.66, .33, .175, 0.0875]
+const SPEED = 0.1
+const LOOK = 0.02
+const TRANSCEND = 0.1
 
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 const geometry = new THREE.PlaneGeometry(2, 4);
@@ -32,35 +38,24 @@ renderer.setAnimationLoop(animate);
 
 document.body.appendChild(renderer.domElement);
 
+const input = new Input()
+
 
 let time = 0
-
 let yaw = 0
 let pitch = 0
 
-const speed = 0.05
-const rotate = 0.05
-
-const add_shader_vec3 = (v, g) => {
+const add_shader_vec3 = (v: THREE.Vector3, g: THREE.Vector3) => {
     v.x += g.x
     v.y += g.y
     v.z += g.z
 }
 
-let pre_val_test1 = 0
-let pre_val_test2 = 0
-let pre_val_test3 = 0
-let pre_val_test4 = 0
-
-let pre_vay_test1 = 0
-let pre_vay_test2 = 0
-let pre_vay_test3 = 0
-let pre_vay_test4 = 0
-
 function animate() {
     time++
+    input.update_input()
     renderer.render(scene, camera)
-    update_input()
+
 
     const m = uniforms.uMatrixC.value.elements
 
@@ -68,51 +63,44 @@ function animate() {
     const up = new THREE.Vector3(m[1], m[5], m[9])
     const left = new THREE.Vector3(m[0], m[4], m[8])
 
-    if (input["w"]) {
-        forward.multiplyScalar(-speed)
+    if (input.key("w") && !input.key("s")) {
+        forward.multiplyScalar(-SPEED)
         add_shader_vec3(uniforms.uPosition.value, forward)
     }
 
-    if (input["s"]) {
-        forward.multiplyScalar(speed)
+    if (input.key("s") && !input.key("w")) {
+        forward.multiplyScalar(SPEED)
         add_shader_vec3(uniforms.uPosition.value, forward)
     }
 
-    if (input["a"]) {
-        left.multiplyScalar(-speed)
+    if (input.key("a") && !input.key("d")) {
+        left.multiplyScalar(-SPEED)
         add_shader_vec3(uniforms.uPosition.value, left)
     }
 
-    if (input["d"]) {
-        left.multiplyScalar(speed)
+    if (input.key("d") && !input.key("a")) {
+        left.multiplyScalar(SPEED)
         add_shader_vec3(uniforms.uPosition.value, left)
     }
 
-    console.log(input.is_moving)
-    if (input.locked && input.is_moving) {
-        yaw += pre_val_test1 * .50 + pre_val_test2 * .25 + pre_val_test3 * .125 + pre_val_test4 * .0625
-        // yaw += input.movement_x * 0.01
-        
-        const val = input.movement_x * 0.01
-        
-        pre_val_test4 = pre_val_test3
-        pre_val_test3 = pre_val_test2
-        pre_val_test2 = pre_val_test1
-        pre_val_test1 = val
+    if (input.key("space")) {
+        add_shader_vec3(uniforms.uPosition.value, new THREE.Vector3(0.0, TRANSCEND, 0.0))
     }
 
-    if (input.locked && input.is_moving) {
-        // pitch += input.movement_y * 0.01
+    if (input.key("shift")) {
+        add_shader_vec3(uniforms.uPosition.value, new THREE.Vector3(0.0, -TRANSCEND, 0.0))
+    }
 
-        pitch += pre_vay_test1 * .50 + pre_vay_test2 * .25 + pre_vay_test3 * .125 + pre_vay_test4 * .0625
-        // yaw += input.movement_x * 0.01
-        
-        const val = input.movement_y * 0.01
-        
-        pre_vay_test4 = pre_vay_test3
-        pre_vay_test3 = pre_vay_test2
-        pre_vay_test2 = pre_vay_test1
-        pre_vay_test1 = val
+    if (input.state("locked") && input.state("is_moving")) {
+        const value = input.mouse("movement_x")
+        const yaw_smooth = input.smooth("movement_x", value, SMOOTH)
+        yaw += yaw_smooth * LOOK
+    }
+
+    if (input.state("locked") && input.state("is_moving")) {
+        const value = input.mouse("movement_y")
+        const pitch_smooth = input.smooth("movement_y", value, SMOOTH)
+        pitch += pitch_smooth * LOOK
     }
 
 
