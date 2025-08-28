@@ -1,11 +1,10 @@
 import * as THREE from "three"
 import { Input } from "./input";
 
-// const SMOOTH = [.5, .25, .125, 0.0625, 0.03125, 0.015625, 0.0078125, 0.00390625, 0.001953125, 0.0009765625]
-const SMOOTH = [.66, .33, .175, 0.0875]
-const SPEED = 0.1
-const LOOK = 0.02
-const TRANSCEND = 0.1
+const SPEED = 0.3
+const LOOK = 0.01
+const TRANSCEND = 0.5
+const SMOOTH = [.66, .33, .175, .175]
 
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 const geometry = new THREE.PlaneGeometry(2, 4);
@@ -14,12 +13,11 @@ const scene = new THREE.Scene();
 
 const uniforms = {
     uTime: new THREE.Uniform(0.0),
-    uLightPos: new THREE.Uniform(new THREE.Vector3(10, 10, 0)),
-    uSunDirection: new THREE.Uniform(new THREE.Vector3(.5, .7, .2)),
     uResolution: new THREE.Uniform(new THREE.Vector2(0, 0)),
 
     uMatrixC: new THREE.Uniform(new THREE.Matrix4()),
-    uPosition: new THREE.Uniform(new THREE.Vector3(0, 0, 5)),
+    // uPosition: new THREE.Uniform(new THREE.Vector3(0, -0, 20)),
+    uPosition: new THREE.Uniform(new THREE.Vector3(0, 0, 20)),
 };
 
 const material = new THREE.ShaderMaterial({
@@ -51,6 +49,8 @@ const add_shader_vec3 = (v: THREE.Vector3, g: THREE.Vector3) => {
     v.z += g.z
 }
 
+
+let speed = SPEED
 function animate() {
     time++
     input.update_input()
@@ -64,24 +64,31 @@ function animate() {
     const left = new THREE.Vector3(m[0], m[4], m[8])
 
     if (input.key("w") && !input.key("s")) {
-        forward.multiplyScalar(-SPEED)
+        forward.multiplyScalar(-speed)
         add_shader_vec3(uniforms.uPosition.value, forward)
     }
 
     if (input.key("s") && !input.key("w")) {
-        forward.multiplyScalar(SPEED)
+        forward.multiplyScalar(speed)
         add_shader_vec3(uniforms.uPosition.value, forward)
     }
 
     if (input.key("a") && !input.key("d")) {
-        left.multiplyScalar(-SPEED)
+        left.multiplyScalar(-speed)
         add_shader_vec3(uniforms.uPosition.value, left)
     }
 
     if (input.key("d") && !input.key("a")) {
-        left.multiplyScalar(SPEED)
+        left.multiplyScalar(speed)
         add_shader_vec3(uniforms.uPosition.value, left)
     }
+
+    if (input.key("e")) {
+        speed = 1;
+    } else {
+        speed = SPEED;
+    }
+
 
     if (input.key("space")) {
         add_shader_vec3(uniforms.uPosition.value, new THREE.Vector3(0.0, TRANSCEND, 0.0))
@@ -114,6 +121,7 @@ function animate() {
     uniforms.uMatrixC.value.multiplyMatrices(rot_matrix, translation)
 
 
+    uniforms.uTime.value = time
     uniforms.uResolution.value = new THREE.Vector2(
         window.innerWidth,
         window.innerHeight

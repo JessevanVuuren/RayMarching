@@ -1,14 +1,15 @@
 interface KeyboardState {
-  "a": boolean,
-  "w": boolean,
-  "d": boolean,
-  "s": boolean,
-  "q": boolean,
-  "e": boolean,
-  "r": boolean,
-  "f": boolean,
+  "a": boolean
+  "w": boolean
+  "d": boolean
+  "s": boolean
+  "q": boolean
+  "e": boolean
+  "r": boolean
+  "f": boolean
   "shift": boolean
   "space": boolean
+  "ctrl": boolean
 }
 
 interface GlobalState {
@@ -16,92 +17,52 @@ interface GlobalState {
 }
 
 interface MouseState {
-  "left_button": boolean,
-  "right_button": boolean,
-  "middle_button": boolean,
+  "left_button": boolean
+  "right_button": boolean
+  "middle_button": boolean
 
-  "upward": boolean,
-  "downward": boolean,
-  "rightward": boolean,
-  "leftward": boolean,
+  "upward": boolean
+  "downward": boolean
+  "rightward": boolean
+  "leftward": boolean
 
-  "is_moving": boolean,
-  "locked": boolean,
+  "is_moving": boolean
+  "locked": boolean
 }
 
 interface MousePos {
-  "pos_x": number,
-  "pos_y": number,
+  "pos_x": number
+  "pos_y": number
 
-  "pre_pos_x": number,
-  "pre_pos_y": number,
+  "pre_pos_x": number
+  "pre_pos_y": number
 
-  "delta_x": number,
-  "delta_y": number,
-  "movement_y": number,
-  "movement_x": number,
+  "delta_x": number
+  "delta_y": number
+  "movement_y": number
+  "movement_x": number
 }
 
 type SmoothMotion = { [value: string]: number[] }
 
 export class Input {
 
-  private keyboard: KeyboardState = {
-    "a": false,
-    "w": false,
-    "d": false,
-    "s": false,
-    "q": false,
-    "e": false,
-    "r": false,
-    "f": false,
-    "shift": false,
-    "space": false,
-  }
+  private smoothValues = {} as SmoothMotion
+  private keyboard = {} as KeyboardState
+  private mouseState = {} as MouseState
+  private global = {} as GlobalState
+  private mousePos = {} as MousePos
 
-  private global: GlobalState = {
-    last_stored_time: 0
-  }
-
-  private mouseState: MouseState = {
-    "middle_button": false,
-    "right_button": false,
-    "left_button": false,
-
-    "rightward": false,
-    "leftward": false,
-    "downward": false,
-    "upward": false,
-
-    "is_moving": false,
-    "locked": false,
-  }
-
-  private mousePos: MousePos = {
-    "pos_x": 0,
-    "pos_y": 0,
-
-    "pre_pos_x": 0,
-    "pre_pos_y": 0,
-
-    "delta_x": 0,
-    "delta_y": 0,
-
-    "movement_y": 0,
-    "movement_x": 0,
-  }
-
-  private smoothValues: SmoothMotion = {}
   private body: HTMLBodyElement
 
   constructor() {
     this.body = document.getElementsByTagName("body")[0]
     document.addEventListener("keydown", (e) => {
       this.update_keyboard(true, e)
-    }, false)
+    })
     document.addEventListener("keyup", (e) => {
       this.update_keyboard(false, e)
-    }, false)
+    })
 
     document.addEventListener("pointerlockchange", (e) => {
       this.mouse_lock_change(e)
@@ -152,6 +113,11 @@ export class Input {
   private update_keyboard(state: boolean, e: KeyboardEvent) {
     let event_key = e.key.toLowerCase()
     if (event_key == " ") event_key = "space"
+    if (event_key == "control") event_key = "ctrl"
+
+    if (!Object.keys(this.keyboard).includes(event_key) && state) {
+      this.keyboard[event_key as keyof KeyboardState] = state
+    }
 
     for (const key of Object.keys(this.keyboard)) {
       if (event_key == key) {
